@@ -9,7 +9,7 @@
 
 
     // Include private headers here
-    # include "data_structures/data_structures.hpp"
+    # include "data_structures/data_structure.hpp"
 
 
 #endif
