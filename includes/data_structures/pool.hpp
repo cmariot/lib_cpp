@@ -5,6 +5,7 @@
 # include <iostream>
 # include <string>
 # include <vector>
+# include <stdexcept>
 
 
 template <typename TType>
@@ -23,40 +24,88 @@ class Pool {
 
     */
 
+
     public:
 
-        // Pool();
+        class Object {
 
-        // ~Pool();
+            public:
+                Object();
+                Object(TType * p_object);
+                ~Object();
 
-        // Allocates a certain number of TType objects withing the Pool
-        void resize(const size_t & numberOfObjectStored);
+                // Store the pre-allocated object
+                TType * object;
+                bool constructed;
+
+                // Accès à l'état de construction
+                bool isConstructed() const;
+
+                // Access the object using pointer syntax (non const)
+                TType * operator -> ();
+
+                // Access the object using pointer syntax (const)
+                const TType * operator -> () const;
+
+                // Access the object using dereference syntax (non const)
+                TType & operator * ();
+
+                // Access the object using dereference syntax (const)
+                const TType & operator * () const;
+        };
+
+
+    public:
+
+        Pool() noexcept;
+
+        ~Pool() noexcept;
+
+        // Move constructor
+        Pool(Pool&& other) noexcept;
+
+        // Move assignment
+        Pool& operator=(Pool&& other) noexcept;
+
+        // Empêche la copie et l'affectation
+        Pool(const Pool&) = delete;
+        Pool& operator=(const Pool&) = delete;
+
+        // Allocates a certain number of TType objects within the Pool
+        void resize(const size_t& numberOfObjectsStored);
 
         // Creates a Pool::Object containing a pre-allocated object,
         // using the constructor with parameters as defined by TArgs definition
         template<typename ... TArgs>
-        Pool::Object<TType> acquire(TArgs && ... p_args)
+        typename Pool<TType>::Object acquire(TArgs&& ... p_args);
+
+        // Returns the object to the pool for reuse
+        void release(typename Pool<TType>::Object& p_object);
+
+        // Nombre d'objets disponibles dans le pool
+        size_t availableCount() const noexcept;
+
+        // Nombre d'objets utilisés
+        size_t usedCount() const noexcept;
+
+        // Capacité totale du pool
+        size_t capacity() const noexcept;
+
+        // Vide le pool (libère tous les objets)
+        void clear() noexcept;
 
     private:
 
         // Storage for the pre-allocated objects
-        std::vector<TType*> storage;
+        std::vector<Object> storage;
 
         // List of free objects available for reuse
-        std::vector<TType*> available;
-
-        class Object {
-            public:
-
-                TType * operator->() {
-                    return this->object;
-                }
-            
-        };
+        std::vector<Object*> available;
 
 
 };
 
+# include "pool.tpp"
 
 
 #endif // POOL_HPP

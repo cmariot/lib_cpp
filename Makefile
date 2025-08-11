@@ -34,7 +34,7 @@ INCLUDES		 = -I includes
 SRC_ROOTDIR		= sources/
 
 
-SRC_FILES	    = data_structures/pool.cpp
+SRC_FILES	    = data_structures/data_buffer.cpp
 
 
 SRCS			= $(addprefix $(SRC_ROOTDIR), $(SRC_FILES))

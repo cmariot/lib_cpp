@@ -2,30 +2,33 @@
 #include <iostream>
 
 int main() {
-    // Create a pool for integers, can hold up to 5 integers
-    Pool<int> intPool(5);
 
-    // Acquire an integer from the pool
-    int* pInt = intPool.acquire();
-    if (pInt) {
-        *pInt = 42;
-        std::cout << "Acquired integer: " << *pInt << std::endl;
-    }
+    // Crée un pool pouvant contenir 3 int
+    Pool<int> intPool;
+    intPool.resize(3);
 
-    // Release the integer back to the pool
-    intPool.release(pInt);
+    // Acquisition de 3 entiers du pool
+    auto obj1 = intPool.acquire(42);
+    auto obj2 = intPool.acquire(1337);
+    auto obj3 = intPool.acquire(777);
 
-    // Acquire 5 more integers
-    for (int i = 0; i < 6; ++i) {
-        int* pNewInt = intPool.acquire();
-        if (pNewInt) {
-            *pNewInt = i + 1;
-            std::cout << "Acquired integer: " << *pNewInt << std::endl;
-        }
-        else {
-            std::cout << "Failed to acquire integer, pool is full." << std::endl;
-        }
-    }
+    // Utilisation des objets
+    *obj1 = 42;
+    *obj2 = 1337;
+
+    std::cout << "obj1: " << *obj1 << std::endl;
+    std::cout << "obj2: " << *obj2 << std::endl;
+    std::cout << "obj3: " << *obj3 << std::endl;
+
+    // Libération des objets (remise dans le pool)
+    intPool.release(obj1);
+    intPool.release(obj2);
+    intPool.release(obj3);
+
+    std::cout <<
+    "Objets disponibles après release: " << intPool.availableCount()
+    << std::endl;
 
     return 0;
+
 }
