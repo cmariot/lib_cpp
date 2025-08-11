@@ -7,7 +7,6 @@
 # include <vector>
 # include <stdexcept>
 
-
 template <typename TType>
 class Pool {
 

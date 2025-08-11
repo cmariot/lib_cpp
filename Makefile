@@ -15,7 +15,7 @@ NAME			 = libftpp.a
 CC				 = c++
 
 FLAGS			 = -Wall -Wextra -Werror
-FLAGS            += --std=c++11
+FLAGS            += --std=c++17
 
 
 CFLAGS			 = $(FLAGS)
@@ -34,7 +34,8 @@ INCLUDES		 = -I includes
 SRC_ROOTDIR		= sources/
 
 
-SRC_FILES	    = data_structures/data_buffer.cpp
+SRC_FILES	    = data_structures/data_buffer.cpp \
+				  iostream/thread_safe_iostream.cpp
 
 
 SRCS			= $(addprefix $(SRC_ROOTDIR), $(SRC_FILES))

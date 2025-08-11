@@ -76,6 +76,7 @@ class DataBuffer {
         DataBuffer& operator>>(std::string& str);
 
     private:
+
         std::vector<uint8_t> m_buffer;    // Le buffer de bytes
         size_t m_size;                    // Taille actuelle des données
         size_t m_readPosition;            // Position de lecture courante
