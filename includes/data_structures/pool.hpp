@@ -75,8 +75,8 @@ class Pool {
 
         // Creates a Pool::Object containing a pre-allocated object,
         // using the constructor with parameters as defined by TArgs definition
-        template<typename ... TArgs>
-        typename Pool<TType>::Object acquire(TArgs&& ... p_args);
+    template<typename ... TArgs>
+    typename Pool<TType>::Object& acquire(TArgs&& ... p_args);
 
         // Returns the object to the pool for reuse
         void release(typename Pool<TType>::Object& p_object);

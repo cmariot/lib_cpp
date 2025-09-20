@@ -12,14 +12,9 @@ NAME			 = libftpp.a
 # **************************************************************************** #
 
 
-CC				 = c++
+CXX			 = c++
 
-FLAGS			 = -Wall -Wextra -Werror
-FLAGS            += --std=c++17
-
-
-CFLAGS			 = $(FLAGS)
-LFLAGS			 = $(FLAGS)
+CXXFLAGS		 = -Wall -Wextra -Werror -std=c++23
 
 
 INCLUDES		 = -I includes
@@ -84,7 +79,7 @@ all: header $(NAME)
 # Compilation des fichiers objets
 $(OBJ_ROOTDIR)%.o: $(SRC_ROOTDIR)%.cpp
 				@mkdir -p $(OBJ_DIR)
-				$(CC) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+				$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 
 # Création de la librairie statique
@@ -100,7 +95,14 @@ clean :
 
 # Nettoyage complet (librairie + objets)
 fclean: clean
-				@rm -f $(NAME)
+		@rm -f $(NAME)
+		@rm -rf $(TEST_BIN_DIR) $(TESTS_OBJ) tests/*.o tests/*/*.o
+		@rm -f $(NAME)
+		@rm -f tests/tests_launcher.cpp
+		@echo "Invoking tests/framework fclean (if present)..."
+		@if [ -d tests/framework ]; then $(MAKE) -C tests/framework fclean || true; fi
+		@echo "Removing .log files..."
+		@find . -type f -name "*.log" -print -delete || true
 
 
 # Recompilation complète
@@ -121,6 +123,9 @@ help:
 	@echo "  clean    - Supprime les fichiers objets et dépendances"
 	@echo "  fclean   - Supprime la librairie, les objets et dépendances"
 	@echo "  re       - Recompile tout"
+	@echo "  tests    - Compile et lance les tests unitaires"
+	@echo "  test-only - Lance les tests sans recompiler la librairie"
+	@echo "  tests-clean - Supprime les binaires/objets des tests"
 	@echo "  help     - Affiche ce message d'aide"
 
 
@@ -128,3 +133,48 @@ help:
 -include $(DEPENDS)
 
 .SILENT : 		all
+
+
+# **************************************************************************** #
+#                                 TESTS                                       #
+# **************************************************************************** #
+
+TEST_BIN_DIR = bin
+TESTS_SRC = tests/tests_launcher.cpp \
+		tests/data_buffer/data_buffer.cpp \
+		tests/pool/pool.cpp
+
+TESTS_OBJ = $(patsubst %.cpp,%.o,$(TESTS_SRC))
+
+.PHONY: tests run-tests
+
+tests: $(TEST_BIN_DIR) tests/tests_launcher.cpp $(TESTS_OBJ) tests/framework/libunit.a $(NAME)
+		$(CXX) $(CXXFLAGS) $(INCLUDES) -I tests/framework/includes -o $(TEST_BIN_DIR)/run_tests $(TESTS_OBJ) tests/framework/libunit.a $(NAME)
+		@printf "\nTests binary created: $(TEST_BIN_DIR)/run_tests\n"
+		$(TEST_BIN_DIR)/run_tests
+
+run-tests: tests
+
+.PHONY: tests-clean test-only
+
+test-only:
+		@if [ -x $(TEST_BIN_DIR)/run_tests ]; then $(TEST_BIN_DIR)/run_tests; else echo "No test binary found. Run 'make tests' first."; fi
+
+tests-clean:
+		@rm -f $(TEST_BIN_DIR)/run_tests $(TESTS_OBJ)
+
+$(TEST_BIN_DIR):
+		@mkdir -p $(TEST_BIN_DIR)
+
+
+# Ensure the test framework archive is built when requested by top-level tests target
+tests/framework/libunit.a:
+		@if [ -d tests/framework ]; then $(MAKE) -C tests/framework all || true; else echo "No tests/framework directory"; fi
+
+# Auto-generate tests/tests_launcher.cpp from Python script
+tests/tests_launcher.cpp: tests/generate_launcher.py
+		@echo "Generating tests/tests_launcher.cpp..."
+		@python3 tests/generate_launcher.py
+
+%.o: %.cpp
+		$(CXX) $(CXXFLAGS) $(INCLUDES) -I tests/framework/includes -c $< -o $@

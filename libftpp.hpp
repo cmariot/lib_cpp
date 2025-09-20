@@ -1,5 +1,5 @@
-#ifndef LIFTCPP_HPP
-# define LIFTCPP_HPP
+#ifndef LIBFTPP_HPP
+# define LIBFTPP_HPP
 
 
     // Include public headers here

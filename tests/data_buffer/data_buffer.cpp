@@ -41,13 +41,21 @@ void test_buffer_overflow() {
     }
 }
 
-int main() {
-    std::cout << "=== Test des types multiples ===" << std::endl;
-    test_multiple_types();
+// Wrappers for unit test framework
+extern "C" int data_multiple_types_test(void) {
+    try {
+        test_multiple_types();
+        return 0; // OK
+    } catch (...) {
+        return 255; // KO
+    }
+}
 
-    std::cout << "\n=== Test de dépassement de buffer ===" << std::endl;
-    test_buffer_overflow();
-
-    std::cout << "\nTous les tests ont réussi !" << std::endl;
-    return 0;
+extern "C" int data_buffer_overflow_test(void) {
+    try {
+        test_buffer_overflow();
+        return 0;
+    } catch (...) {
+        return 255;
+    }
 }

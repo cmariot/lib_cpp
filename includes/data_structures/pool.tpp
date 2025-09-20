@@ -61,7 +61,7 @@ void Pool<TType>::resize(const size_t& numberOfObjectsStored) {
 
 template <typename TType>
 template<typename ... TArgs>
-typename Pool<TType>::Object Pool<TType>::acquire(TArgs && ... p_args) {
+typename Pool<TType>::Object& Pool<TType>::acquire(TArgs && ... p_args) {
     if (available.empty()) {
         throw std::runtime_error("No available objects in the pool");
     }

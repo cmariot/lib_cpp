@@ -6,6 +6,8 @@
 # include <stdexcept>
 # include <type_traits>
 # include <string>
+# include <cstdint>
+# include <cstddef>
 
 class DataBuffer {
 
