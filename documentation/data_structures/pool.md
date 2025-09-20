@@ -5,13 +5,15 @@
 La classe `Pool` est une implémentation du design pattern "Object Pool" qui permet de gérer efficacement un ensemble d'objets réutilisables. Cette structure de données est particulièrement utile pour optimiser les performances lorsque la création et la destruction fréquentes d'objets sont coûteuses.
 
 ### Avantages
+
 - Réduction des allocations/désallocations mémoire
 - Diminution de la fragmentation mémoire
 - Amélioration des performances pour les objets fréquemment créés/détruits
 
-## Class Pool<TType>
+## Class `Pool<TType>`
 
 ### Template Parameters
+
 - `TType` : Type des objets gérés par le pool
 
 ### Constructeurs et Destructeur
@@ -28,18 +30,22 @@ Pool& operator=(const Pool&) = delete;   // Affectation interdite
 ### Méthodes Publiques
 
 #### Gestion de la Taille
+
 ```cpp
 void resize(const size_t& numberOfObjectsStored);
 ```
+
 - Alloue un nombre spécifié d'objets dans le pool
 - Lance une exception `std::invalid_argument` si numberOfObjectsStored est 0
 - Libère les objets existants avant le redimensionnement
 
 #### Acquisition et Libération
+
 ```cpp
 template<typename ... TArgs>
 typename Pool<TType>::Object acquire(TArgs&& ... p_args);
 ```
+
 - Récupère un objet du pool
 - Construit l'objet avec les arguments fournis
 - Lance une exception si le pool est vide
@@ -47,10 +53,12 @@ typename Pool<TType>::Object acquire(TArgs&& ... p_args);
 ```cpp
 void release(typename Pool<TType>::Object& p_object);
 ```
+
 - Retourne un objet au pool pour réutilisation future
 - Appelle le destructeur de l'objet
 
 #### Informations sur l'État
+
 ```cpp
 size_t availableCount() const noexcept;  // Nombre d'objets disponibles
 size_t usedCount() const noexcept;       // Nombre d'objets en utilisation
@@ -58,29 +66,33 @@ size_t capacity() const noexcept;        // Capacité totale du pool
 ```
 
 #### Nettoyage
+
 ```cpp
 void clear() noexcept;  // Vide le pool et libère tous les objets
 ```
 
-## Class Pool<TType>::Object
+## Class `Pool<TType>::Object`
 
 La classe `Object` est une classe wrapper qui encapsule les objets gérés par le pool. Elle fournit une interface sécurisée pour accéder aux objets alloués.
 
-### Constructeurs et Destructeur
+### Constructeurs et Destructeur `Pool<TType>::Object`
+
 ```cpp
 Object();                // Constructeur par défaut
 Object(TType* p_object); // Constructeur avec pointeur
 ~Object();              // Destructeur
 ```
 
-### Méthodes Publiques
+### Méthodes Publiques `Pool<TType>::Object`
 
 #### État de l'Objet
+
 ```cpp
 bool isConstructed() const;  // Vérifie si l'objet est construit
 ```
 
 #### Opérateurs d'Accès
+
 ```cpp
 TType* operator->();                 // Accès style pointeur (non-const)
 const TType* operator->() const;     // Accès style pointeur (const)

@@ -25,10 +25,10 @@ NAME			 = libunit.a
 # **************************************************************************** #
 
 
-CC				 = g++ --std=c++0x
+CXX ?= g++
 
 
-CFLAGS			 = -Wall -Wextra -Werror -pthread -O3
+CXXFLAGS ?= -Wall -Wextra -Werror -pthread -O3
 LFLAGS			 = -Wall -Wextra -Werror -pthread -O3
 
 
@@ -98,8 +98,8 @@ all : 			header $(NAME)
 
 
 $(OBJ_ROOTDIR)%.o: $(SRC_ROOTDIR)%.cpp
-				@mkdir -p $(OBJ_DIR)
-				$(CC) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+		@mkdir -p $(dir $@)
+		$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 
 $(NAME)	: 		$(OBJS)

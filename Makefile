@@ -72,20 +72,25 @@ RESET			= \033[0m
 
 .PHONY: all clean fclean re help
 .PHONY: help
+.PHONY: tests test-only tests-clean run-tests
 
 all: header $(NAME)
 
 
+# Tooling
+AR ?= ar
+
+
 # Compilation des fichiers objets
 $(OBJ_ROOTDIR)%.o: $(SRC_ROOTDIR)%.cpp
-				@mkdir -p $(OBJ_DIR)
-				$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+		@mkdir -p $(dir $@)
+		$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 
 # Création de la librairie statique
-$(NAME)	: 		$(OBJS)
-				ar rcs $(NAME) $(OBJS)
-				@printf "\n"
+$(NAME) 	: 		$(OBJS)
+			$(AR) rcs $(NAME) $(OBJS)
+			@printf "\n"
 
 
 # Nettoyage des fichiers objets et dépendances
@@ -94,15 +99,14 @@ clean :
 
 
 # Nettoyage complet (librairie + objets)
-fclean: clean
+	fclean: clean
 		@rm -f $(NAME)
 		@rm -rf $(TEST_BIN_DIR) $(TESTS_OBJ) tests/*.o tests/*/*.o
-		@rm -f $(NAME)
 		@rm -f tests/tests_launcher.cpp
 		@echo "Invoking tests/framework fclean (if present)..."
 		@if [ -d tests/framework ]; then $(MAKE) -C tests/framework fclean || true; fi
-		@echo "Removing .log files..."
-		@find . -type f -name "*.log" -print -delete || true
+		@echo "Removing .log files under tests/..."
+		@find tests -type f -name "*.log" -print -delete || true
 
 
 # Recompilation complète
@@ -177,4 +181,5 @@ tests/tests_launcher.cpp: tests/generate_launcher.py
 		@python3 tests/generate_launcher.py
 
 %.o: %.cpp
+		@mkdir -p $(dir $@)
 		$(CXX) $(CXXFLAGS) $(INCLUDES) -I tests/framework/includes -c $< -o $@

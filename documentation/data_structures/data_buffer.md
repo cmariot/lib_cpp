@@ -5,6 +5,7 @@
 La classe `DataBuffer` est un conteneur polymorphique permettant de stocker et manipuler des objets sous forme de bytes (format binaire). Cette structure de données est particulièrement utile pour la sérialisation/désérialisation d'objets, la communication réseau et le stockage binaire efficace.
 
 ### Avantages
+
 - Sérialisation binaire efficace et rapide
 - Support pour tout type de données trivialement copiable
 - Gestion automatique de la mémoire
@@ -28,6 +29,7 @@ DataBuffer& operator=(const DataBuffer&) = delete; // Affectation interdite
 ### Méthodes Publiques
 
 #### Accès aux Données
+
 ```cpp
 const uint8_t* data() const noexcept;    // Accès aux données brutes
 size_t size() const noexcept;            // Taille actuelle des données
@@ -36,6 +38,7 @@ bool empty() const noexcept;             // Vérification si le buffer est vide
 ```
 
 #### Gestion de la Mémoire
+
 ```cpp
 void clear() noexcept;                   // Vide le buffer
 void reserve(size_t newCapacity);        // Pré-alloue de l'espace
@@ -59,6 +62,7 @@ DataBuffer& operator>>(std::string& str);
 ## Exemples d'Utilisation
 
 ### Exemple Basique
+
 ```cpp
 DataBuffer buffer;
 
@@ -78,6 +82,7 @@ buffer >> readNumber >> readPi >> readMessage;
 ```
 
 ### Exemple avec Structures Personnalisées
+
 ```cpp
 struct Point {
     float x, y;
@@ -93,6 +98,7 @@ buffer >> readPoint;
 ```
 
 ### Exemple de Communication Réseau
+
 ```cpp
 // Envoi
 DataBuffer sendBuffer;
@@ -125,12 +131,14 @@ recvBuffer >> header >> payload;
 ## Bonnes Pratiques
 
 1. **Vérification des Types**
+
    ```cpp
    static_assert(std::is_trivially_copyable<T>::value,
        "Type must be trivially copyable for binary serialization");
    ```
 
 2. **Gestion des Erreurs**
+
    ```cpp
    try {
        buffer >> value;
@@ -140,6 +148,7 @@ recvBuffer >> header >> payload;
    ```
 
 3. **Optimisation de la Mémoire**
+
    ```cpp
    // Pré-allouer si la taille est connue
    DataBuffer buffer(expectedSize);
