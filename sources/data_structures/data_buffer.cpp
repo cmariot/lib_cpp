@@ -48,6 +48,21 @@ bool DataBuffer::empty() const noexcept {
     return m_size == 0;
 }
 
+size_t DataBuffer::readPosition() const noexcept {
+    return m_readPosition;
+}
+
+void DataBuffer::rewind() noexcept {
+    m_readPosition = 0;
+}
+
+void DataBuffer::seek(size_t pos) {
+    if (pos > m_size) {
+        throw std::out_of_range("Seek position out of range");
+    }
+    m_readPosition = pos;
+}
+
 void DataBuffer::clear() noexcept {
     m_size = 0;
     m_readPosition = 0;

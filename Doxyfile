@@ -1,0 +1,26 @@
+# Minimal Doxygen configuration generated for libftpp
+
+PROJECT_NAME           = "libftpp"
+OUTPUT_DIRECTORY       = documentation
+CREATE_SUBDIRS         = YES
+INPUT                  = includes sources documentation/markdown
+FILE_PATTERNS          = *.hpp *.h *.cpp *.c
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+QUIET                  = NO
+WARNINGS               = YES
+GENERATE_TREEVIEW      = YES
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = $(PWD)
+
+# Enable Markdown support and allow Doxygen to parse .md files
+
+MARKDOWN_SUPPORT       = YES
+
+# Don't include private members by default
+
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES

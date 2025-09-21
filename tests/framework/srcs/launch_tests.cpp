@@ -11,6 +11,10 @@
 /* ************************************************************************** */
 
 #include "libunit.hpp"
+#include <sstream>
+#include <iomanip>
+
+int g_test_left_width = 0;
 
 static int	clean_exit(t_test **test, std::ofstream &log_file)
 {
@@ -32,6 +36,23 @@ int	launch_tests(t_test **test)
 	t_test			*element;
 	int				succeeded = 0;
 	int				total = 0;
+
+	// Compute max width for left column (function_##: test_name)
+	{
+		t_test *it = *test;
+		while (it)
+		{
+			std::ostringstream oss;
+			oss << it->function << "_" << std::setw(2) << std::setfill('0') << total << ": " << it->test_name;
+			int len = static_cast<int>(oss.str().size());
+			if (len > g_test_left_width)
+				g_test_left_width = len;
+			it = it->next;
+			++total;
+		}
+		// reset total for actual run
+		total = 0;
+	}
 
 	std::cout << std::endl;
 	std::cout << BOLDWHITE << (*test)->function

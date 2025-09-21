@@ -28,8 +28,8 @@ NAME			 = libunit.a
 CXX ?= g++
 
 
-CXXFLAGS ?= -Wall -Wextra -Werror -pthread -O3
-LFLAGS			 = -Wall -Wextra -Werror -pthread -O3
+CXXFLAGS ?= -Wall -Wextra -Werror -std=c++17 -pthread -O3
+LFLAGS			 = -Wall -Wextra -Werror -std=c++17 -pthread -O3
 
 
 INCLUDES		 = -I includes
@@ -96,15 +96,26 @@ RESET			= \033[0m
 
 all : 			header $(NAME)
 
+# Logging helpers
+PRINTF			 = @printf
+INFO			 = $(PRINTF) "$(CYAN)%s$(RESET)\n"
+STEP			 = $(PRINTF) "  - %s\n"
+RUN			 = $(PRINTF) "  $ %s\n" "$(1)"; $(1)
+
+
+
 
 $(OBJ_ROOTDIR)%.o: $(SRC_ROOTDIR)%.cpp
+		$(INFO) "Compiling $< -> $@"
 		@mkdir -p $(dir $@)
-		$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+		$(call RUN,$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@)
+		@printf "\n"
 
 
 $(NAME)	: 		$(OBJS)
-				ar rcs $(NAME) $(OBJS)
-				@printf "\n"
+			$(INFO) "Archiving $(NAME)"
+			$(call RUN,ar rcs $(NAME) $(OBJS))
+			@printf "\n"
 
 
 leaks :			all

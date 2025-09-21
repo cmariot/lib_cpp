@@ -9,12 +9,33 @@
 # include <cstdint>
 # include <cstddef>
 
+/**
+ * @file data_buffer.hpp
+ * @brief Binary polymorphic buffer for serializing/deserializing objects.
+ *
+ * DataBuffer stores raw bytes and provides streaming operators << and >>
+ * for trivially-copyable types. A specialization handles std::string by
+ * writing the length followed by the bytes of the string.
+ */
+
+/**
+ * @class DataBuffer
+ * @brief A resizable binary buffer with stream-like operators.
+ *
+ * The class is non-copyable (to avoid accidental expensive copies) but
+ * supports move semantics. Use operator<< to serialize trivially-copyable
+ * objects and operator>> to deserialize them in the same order.
+ */
 class DataBuffer {
 
     public:
-        // Constructeurs et destructeur
+        /** Default constructor: constructs an empty buffer. */
         DataBuffer();
+
+        /** Create an empty buffer with reserved capacity. */
         explicit DataBuffer(size_t initialCapacity);
+
+        /** Destructor. */
         ~DataBuffer();
 
         // Suppression de la copie (pour éviter les copies accidentelles de grandes quantités de données)
@@ -25,17 +46,37 @@ class DataBuffer {
         DataBuffer(DataBuffer&& other) noexcept;
         DataBuffer& operator=(DataBuffer&& other) noexcept;
 
-        // Méthodes d'accès
-        const uint8_t* data() const noexcept;
-        size_t size() const noexcept;
-        size_t capacity() const noexcept;
-        bool empty() const noexcept;
+    // Accessors
+    /** Return pointer to internal raw data (may be nullptr if empty). */
+    const uint8_t* data() const noexcept;
 
-        // Méthodes de manipulation
-        void clear() noexcept;
-        void reserve(size_t newCapacity);
+    /** Current size (number of bytes of serialized data). */
+    size_t size() const noexcept;
 
-        // Opérateur d'insertion (sérialisation)
+    /** Current capacity of the underlying vector. */
+    size_t capacity() const noexcept;
+
+    /** True if the buffer contains no data. */
+    bool empty() const noexcept;
+
+        /** Current read position (offset in bytes). */
+        size_t readPosition() const noexcept;
+
+        /** Reset read position to zero (allow rereading). */
+        void rewind() noexcept;
+
+        /** Set the read position to an absolute offset. Throws std::out_of_range
+         * if pos > size(). */
+        void seek(size_t pos);
+
+    // Mutators
+    /** Clear the buffer data and reset read position. */
+    void clear() noexcept;
+
+    /** Reserve capacity in the underlying storage. */
+    void reserve(size_t newCapacity);
+
+    // Serialization operator
         template<typename T>
         DataBuffer& operator<<(const T& value) {
             static_assert(std::is_trivially_copyable<T>::value,
@@ -54,7 +95,7 @@ class DataBuffer {
             return *this;
         }
 
-        // Opérateur d'extraction (désérialisation)
+    // Deserialization operator
         template<typename T>
         DataBuffer& operator>>(T& value) {
             static_assert(std::is_trivially_copyable<T>::value,
@@ -73,9 +114,9 @@ class DataBuffer {
             return *this;
         }
 
-        // Support spécial pour les std::string
-        DataBuffer& operator<<(const std::string& str);
-        DataBuffer& operator>>(std::string& str);
+    // Special support for std::string: store length (size_t) then bytes
+    DataBuffer& operator<<(const std::string& str);
+    DataBuffer& operator>>(std::string& str);
 
     private:
 

@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "libunit.hpp"
+#include <sstream>
+#include <iomanip>
 
 /*
  * Get all the file content and store it in a std::string
@@ -71,9 +73,13 @@ void	print_test_output(t_test *test, int test_number, std::ofstream &fd, bool co
 {
 	if (cout == false)
 		print_test_output(test, test_number, static_cast<std::ofstream &>(std::cout), true);
-	fd << test->function << "_";
-	fd << std::setw(2) << std::setfill('0') << test_number;
-	fd << ": " << test->test_name << " \t\t";
+	// Build left column and pad to global width for alignment
+	std::ostringstream left;
+	left << test->function << "_";
+	left << std::setw(2) << std::setfill('0') << test_number;
+	left << ": " << test->test_name;
+	std::string lefts = left.str();
+	fd << std::left << std::setw(g_test_left_width + 2) << std::setfill(' ') << lefts;
 	if (test->status == OK)
 		fd << GREEN "[OK]" RESET;
 	else if (test->status == KO)

@@ -56,5 +56,6 @@ int				check_timeout(size_t init_time);
 void			clear_test_list(t_test **test);
 void			print_test_output(t_test *test, int test_nb, std::ofstream &fd, bool cout);
 int				results(int succeeded, int total, std::ofstream &fd, bool recursive);
+extern int g_test_left_width;
 
 #endif
