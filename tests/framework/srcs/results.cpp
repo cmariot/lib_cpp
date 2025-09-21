@@ -12,16 +12,25 @@
 
 #include "libunit.hpp"
 
-int	results(int succeeded, int total, std::ofstream &fd, bool recursive)
+int	results(int succeeded, int total, std::ostream &fd, bool recursive)
 {
 	if (recursive == true)
-		results(succeeded, total, static_cast<std::ofstream &>(std::cout), false);
-	fd << std::endl << BOLDWHITE << succeeded << " / " << total << " = ";
+		results(succeeded, total, static_cast<std::ostream &>(std::cout), false);
+	// Print without colors to the provided stream
+	fd << std::endl << succeeded << " / " << total << " = ";
 	if (succeeded == total)
-		fd << GREEN "[OK]" RESET << std::endl;
+	{
+		if (&fd == &std::cout)
+			fd << GREEN << "[OK]" << RESET << std::endl;
+		else
+			fd << "[OK]" << std::endl;
+	}
 	else
-		fd << RED_COLOR "[KO]" RESET << std::endl;
-	//if (recursive == false)
-		//fd.close();
+	{
+		if (&fd == &std::cout)
+			fd << RED_COLOR << "[KO]" << RESET << std::endl;
+		else
+			fd << "[KO]" << std::endl;
+	}
 	return (0);
 }

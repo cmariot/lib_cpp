@@ -55,7 +55,7 @@ int	launch_tests(t_test **test)
 	}
 
 	std::cout << std::endl;
-	std::cout << BOLDWHITE << (*test)->function
+	std::cout << BOLDWHITE << "libftpp"
 		<< " TESTS :" << RESET << std::endl << std::endl;
 	log_file = create_log_file(*test);
 	if (log_file.is_open() == false)
@@ -64,7 +64,10 @@ int	launch_tests(t_test **test)
 	{
 		if (execute_test(test, log_file))
 			return (clean_exit(test, log_file));
+		// print to log file without colors
 		print_test_output(*test, total, log_file, false);
+		// also print to console with colors
+		print_test_output(*test, total, std::cout, true);
 		if ((*test)->status == OK)
 			succeeded++;
 		total++;

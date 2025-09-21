@@ -54,8 +54,8 @@ int				execute_test(t_test **test, std::ofstream &log_file);
 size_t			get_time(void);
 int				check_timeout(size_t init_time);
 void			clear_test_list(t_test **test);
-void			print_test_output(t_test *test, int test_nb, std::ofstream &fd, bool cout);
-int				results(int succeeded, int total, std::ofstream &fd, bool recursive);
+void			print_test_output(t_test *test, int test_nb, std::ostream &fd, bool to_console);
+int				results(int succeeded, int total, std::ostream &fd, bool recursive);
 extern int g_test_left_width;
 
 #endif

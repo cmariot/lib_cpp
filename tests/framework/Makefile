@@ -100,7 +100,8 @@ all : 			header $(NAME)
 PRINTF			 = @printf
 INFO			 = $(PRINTF) "$(CYAN)%s$(RESET)\n"
 STEP			 = $(PRINTF) "  - %s\n"
-RUN			 = $(PRINTF) "  $ %s\n" "$(1)"; $(1)
+V ?= 0
+RUN			 = $(if $(filter 1,$(V)), $(PRINTF) "  $ %s\n" "$(1)"; $(1), @$(1))
 
 
 

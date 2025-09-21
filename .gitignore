@@ -1,3 +1,17 @@
+# Build artifacts
+/objects/
+/objs/
+/tests/objects/
+/bin/
+/*.a
+
+# Logs and docs
+/tests/logs/
+/DataBuffer.log
+/documentation/html/
+
+# Editor
+.vscode/
 en.subject.pdf
 
 # Prerequisites

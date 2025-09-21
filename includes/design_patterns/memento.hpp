@@ -5,6 +5,10 @@
 # include <string>
 # include <any>
 
+#if __cplusplus < 201703L
+#  error "Memento requires C++17 or newer (std::any). Set -std=c++17 or newer."
+#endif
+
 /**
  * @file memento.hpp
  * @brief Simple Memento pattern helper.

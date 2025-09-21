@@ -39,7 +39,7 @@ static std::string	get_file_content(std::string file)
  * or display the output depending the function call parameters.
  */
 
-static void	check_stdout_output(t_test *test, std::ofstream &fd)
+static void	check_stdout_output(t_test *test, std::ostream &fd, bool with_color)
 {
 	std::string	output;
 
@@ -47,20 +47,24 @@ static void	check_stdout_output(t_test *test, std::ofstream &fd)
 	if (test->expected_output.empty() == false)
 	{
 		if (output == test->expected_output)
-			fd << GREEN "[OUTPUT : OK]" RESET << std::endl;
+		{
+			if (with_color) fd << GREEN << "[OUTPUT : OK]" << RESET << std::endl;
+			else fd << "[OUTPUT : OK]" << std::endl;
+		}
 		else
 		{
-			fd << RED_COLOR "[OUTPUT : KO]" << std::endl;
+			if (with_color) fd << RED_COLOR << "[OUTPUT : KO]" << RESET << std::endl;
+			else fd << "[OUTPUT : KO]" << std::endl;
 			fd << "\t[OUTPUT]:\t[" << output << "]" << std::endl;
-			fd << "\t[EXPECTED]:\t[" << test->expected_output <<  "]" << RESET << std::endl;
+			fd << "\t[EXPECTED]:\t[" << test->expected_output <<  "]" << std::endl;
 			test->status = KO;
 		}
 	}
 	else
 	{
 		fd << std::endl;
-        if (test->display_stdout && output.empty() == false)
-            fd << "[OUTPUT] :" << std::endl << output << std::endl;
+		if (test->display_stdout && output.empty() == false)
+			fd << "[OUTPUT] :" << std::endl << output << std::endl;
 	}
 }
 
@@ -69,10 +73,9 @@ static void	check_stdout_output(t_test *test, std::ofstream &fd)
  * (and call recursively the same function to print on std::cout)
  */
 
-void	print_test_output(t_test *test, int test_number, std::ofstream &fd, bool cout)
+void	print_test_output(t_test *test, int test_number, std::ostream &fd, bool to_console)
 {
-	if (cout == false)
-		print_test_output(test, test_number, static_cast<std::ofstream &>(std::cout), true);
+	// Caller is responsible for invoking this twice when both log and console outputs
 	// Build left column and pad to global width for alignment
 	std::ostringstream left;
 	left << test->function << "_";
@@ -80,27 +83,66 @@ void	print_test_output(t_test *test, int test_number, std::ofstream &fd, bool co
 	left << ": " << test->test_name;
 	std::string lefts = left.str();
 	fd << std::left << std::setw(g_test_left_width + 2) << std::setfill(' ') << lefts;
-	if (test->status == OK)
-		fd << GREEN "[OK]" RESET;
-	else if (test->status == KO)
-		fd << RED_COLOR "[KO]" RESET;
-	else if (test->status == TIMEOUT)
-		fd << RED_COLOR "[TIMEOUT]" RESET;
-	else if (test->status == SIGSEGV)
-		fd << RED_COLOR "[SIGSEGV]" RESET;
-	else if (test->status == SIGBUS)
-		fd << RED_COLOR "[SIGBUS]" RESET;
-	else if (test->status == SIGABRT)
-		fd << RED_COLOR "[SIGABRT]" RESET;
-	else if (test->status == SIGFPE)
-		fd << RED_COLOR "[SIGFPE]" RESET;
-	else if (test->status == SIGPIPE)
-		fd << RED_COLOR "[SIGPIPE]" RESET;
-	else if (test->status == SIGILL)
-		fd << RED_COLOR "[SIGILL]" RESET;
-	else if (test->status == 66)
-		fd << RED_COLOR "[LEAKS]" RESET;
-	else
-		fd << RED_COLOR "[EXIT : " << test->status << "]" RESET;
-	check_stdout_output(test, fd);
+
+	auto write_status = [&](std::ostream &out, bool with_color){
+		if (test->status == OK)
+		{
+			if (with_color) out << GREEN << "[OK]" << RESET;
+			else out << "[OK]";
+		}
+		else if (test->status == KO)
+		{
+			if (with_color) out << RED_COLOR << "[KO]" << RESET;
+			else out << "[KO]";
+		}
+		else if (test->status == TIMEOUT)
+		{
+			if (with_color) out << RED_COLOR << "[TIMEOUT]" << RESET;
+			else out << "[TIMEOUT]";
+		}
+		else if (test->status == SIGSEGV)
+		{
+			if (with_color) out << RED_COLOR << "[SIGSEGV]" << RESET;
+			else out << "[SIGSEGV]";
+		}
+		else if (test->status == SIGBUS)
+		{
+			if (with_color) out << RED_COLOR << "[SIGBUS]" << RESET;
+			else out << "[SIGBUS]";
+		}
+		else if (test->status == SIGABRT)
+		{
+			if (with_color) out << RED_COLOR << "[SIGABRT]" << RESET;
+			else out << "[SIGABRT]";
+		}
+		else if (test->status == SIGFPE)
+		{
+			if (with_color) out << RED_COLOR << "[SIGFPE]" << RESET;
+			else out << "[SIGFPE]";
+		}
+		else if (test->status == SIGPIPE)
+		{
+			if (with_color) out << RED_COLOR << "[SIGPIPE]" << RESET;
+			else out << "[SIGPIPE]";
+		}
+		else if (test->status == SIGILL)
+		{
+			if (with_color) out << RED_COLOR << "[SIGILL]" << RESET;
+			else out << "[SIGILL]";
+		}
+		else if (test->status == 66)
+		{
+			if (with_color) out << RED_COLOR << "[LEAKS]" << RESET;
+			else out << "[LEAKS]";
+		}
+		else
+		{
+			if (with_color) out << RED_COLOR << "[EXIT : " << test->status << "]" << RESET;
+			else out << "[EXIT : " << test->status << "]";
+		}
+	};
+
+	// For console output we want colors; for file output we don't.
+	write_status(fd, to_console);
+	check_stdout_output(test, fd, to_console);
 }
