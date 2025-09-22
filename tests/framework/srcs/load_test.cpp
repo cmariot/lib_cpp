@@ -11,6 +11,9 @@
 /* ************************************************************************** */
 
 #include "libunit.hpp"
+#include <chrono>
+#include <sstream>
+#include <unistd.h>
 
 static void	add_test_to_list(t_test **test, t_test *ret)
 {
@@ -51,7 +54,16 @@ static t_test	*new_test_list(std::string function, std::string test_name,
             new_list->expected_output = expected_output;
             new_list->display_stdout = true;
         }
-		new_list->filename = new_list->function + "_" + new_list->test_name + ".log";
+		// create unique temp filenames using pid and timestamp to avoid collisions
+		pid_t pid = getpid();
+		auto now = std::chrono::system_clock::now();
+		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+		std::ostringstream ss;
+		ss << new_list->function << "_" << new_list->test_name << "_" << pid << "_" << ms << ".log";
+		new_list->filename = ss.str();
+		ss.str(""); ss.clear();
+		ss << new_list->function << "_" << new_list->test_name << "_" << pid << "_" << ms << ".err";
+		new_list->err_filename = ss.str();
 		new_list->status = -2;
 		new_list->next = NULL;
 		return (new_list);

@@ -145,22 +145,22 @@ class Pool {
          * @param p_args forwarded constructor arguments.
          * @return reference to the acquired Pool::Object.
          */
-    template<typename ... TArgs>
-    typename Pool<TType>::Object& acquire(TArgs&& ... p_args);
+        template<typename ... TArgs>
+        typename Pool<TType>::Object& acquire(TArgs&& ... p_args);
 
-    /**
-     * @brief Non-throwing attempt to acquire a slot. Returns nullptr if none available.
-     */
-    template<typename ... TArgs>
-    typename Pool<TType>::Object* try_acquire(TArgs&& ... p_args) noexcept;
+        /**
+         * @brief Non-throwing attempt to acquire a slot. Returns nullptr if none available.
+         */
+        template<typename ... TArgs>
+        typename Pool<TType>::Object* try_acquire(TArgs&& ... p_args) noexcept;
 
-    /**
-     * @brief Acquire and return an RAII Handle that will release on destruction.
-     *
-     * Behaves like acquire(...) but returns a move-only Handle.
-     */
-    template<typename ... TArgs>
-    Handle acquireHandle(TArgs&& ... p_args);
+        /**
+         * @brief Acquire and return an RAII Handle that will release on destruction.
+         *
+         * Behaves like acquire(...) but returns a move-only Handle.
+         */
+        template<typename ... TArgs>
+        Handle acquireHandle(TArgs&& ... p_args);
 
         /**
          * @brief Release a previously acquired object back to the pool.

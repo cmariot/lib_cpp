@@ -46,18 +46,18 @@ class DataBuffer {
         DataBuffer(DataBuffer&& other) noexcept;
         DataBuffer& operator=(DataBuffer&& other) noexcept;
 
-    // Accessors
-    /** Return pointer to internal raw data (may be nullptr if empty). */
-    const uint8_t* data() const noexcept;
+        // Accessors
+        /** Return pointer to internal raw data (may be nullptr if empty). */
+        const uint8_t* data() const noexcept;
 
-    /** Current size (number of bytes of serialized data). */
-    size_t size() const noexcept;
+        /** Current size (number of bytes of serialized data). */
+        size_t size() const noexcept;
 
-    /** Current capacity of the underlying vector. */
-    size_t capacity() const noexcept;
+        /** Current capacity of the underlying vector. */
+        size_t capacity() const noexcept;
 
-    /** True if the buffer contains no data. */
-    bool empty() const noexcept;
+        /** True if the buffer contains no data. */
+        bool empty() const noexcept;
 
         /** Current read position (offset in bytes). */
         size_t readPosition() const noexcept;
@@ -65,18 +65,17 @@ class DataBuffer {
         /** Reset read position to zero (allow rereading). */
         void rewind() noexcept;
 
-        /** Set the read position to an absolute offset. Throws std::out_of_range
-         * if pos > size(). */
+        /** Set the read position to an absolute offset. Throws std::out_of_range if pos > size(). */
         void seek(size_t pos);
 
-    // Mutators
-    /** Clear the buffer data and reset read position. */
-    void clear() noexcept;
+        // Mutators
+        /** Clear the buffer data and reset read position. */
+        void clear() noexcept;
 
-    /** Reserve capacity in the underlying storage. */
-    void reserve(size_t newCapacity);
+        /** Reserve capacity in the underlying storage. */
+        void reserve(size_t newCapacity);
 
-    // Serialization operator
+        // Serialization operator
         template<typename T>
         DataBuffer& operator<<(const T& value) {
             static_assert(std::is_trivially_copyable<T>::value,
@@ -95,7 +94,7 @@ class DataBuffer {
             return *this;
         }
 
-    // Deserialization operator
+        // Deserialization operator
         template<typename T>
         DataBuffer& operator>>(T& value) {
             static_assert(std::is_trivially_copyable<T>::value,

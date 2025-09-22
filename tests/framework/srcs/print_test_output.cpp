@@ -29,7 +29,8 @@ static std::string	get_file_content(std::string file)
 				(std::istreambuf_iterator<char>())
 			);
 	ifs.close();
-	unlink(file.c_str());
+	if (!g_keep_test_tmp)
+		unlink(file.c_str());
 	return (content);
 }
 
@@ -39,11 +40,14 @@ static std::string	get_file_content(std::string file)
  * or display the output depending the function call parameters.
  */
 
+// with_color == true when writing to console; false when writing to log.
 static void	check_stdout_output(t_test *test, std::ostream &fd, bool with_color)
 {
 	std::string	output;
+	std::string	err_output;
 
 	output = get_file_content(test->filename);
+	err_output = get_file_content(test->err_filename);
 	if (test->expected_output.empty() == false)
 	{
 		if (output == test->expected_output)
@@ -63,8 +67,22 @@ static void	check_stdout_output(t_test *test, std::ostream &fd, bool with_color)
 	else
 	{
 		fd << std::endl;
-		if (test->display_stdout && output.empty() == false)
-			fd << "[OUTPUT] :" << std::endl << output << std::endl;
+		// When writing to the logfile (with_color == false), always include captured output
+		if (!with_color)
+		{
+			if (!output.empty())
+				fd << "[STDOUT] :" << std::endl << output << std::endl;
+			if (!err_output.empty())
+				fd << "[STDERR] :" << std::endl << err_output << std::endl;
+		}
+		else
+		{
+			// When writing to the console, only display stdout if the test was configured to show it
+			if (test->display_stdout && !output.empty())
+				fd << "[STDOUT] :" << std::endl << output << std::endl;
+			if (!err_output.empty())
+				fd << "[STDERR] :" << std::endl << err_output << std::endl;
+		}
 	}
 }
 
@@ -144,5 +162,13 @@ void	print_test_output(t_test *test, int test_number, std::ostream &fd, bool to_
 
 	// For console output we want colors; for file output we don't.
 	write_status(fd, to_console);
+	// Add per-test separator with timestamp when writing to log (no color)
+	if (!to_console)
+	{
+		std::time_t tt = std::time(nullptr);
+		char tbuf[64];
+		std::strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", std::localtime(&tt));
+		fd << std::endl << "--- Test run: " << tbuf << " ---" << std::endl;
+	}
 	check_stdout_output(test, fd, to_console);
 }

@@ -101,6 +101,101 @@ typename Pool<TType>::Object& Pool<TType>::acquire(TArgs && ... p_args) {
 }
 
 template <typename TType>
+template<typename ... TArgs>
+typename Pool<TType>::Object* Pool<TType>::try_acquire(TArgs && ... p_args) noexcept {
+    if (available.empty())
+        return nullptr;
+    Object* objPtr = available.back();
+    available.pop_back();
+    if (objPtr->inUse) {
+        available.push_back(objPtr);
+        return nullptr;
+    }
+    try {
+        new (objPtr->object) TType(std::forward<TArgs>(p_args)...);
+        objPtr->constructed = true;
+        objPtr->inUse = true;
+    } catch (...) {
+        available.push_back(objPtr);
+        return nullptr;
+    }
+    return objPtr;
+}
+
+template <typename TType>
+template<typename ... TArgs>
+typename Pool<TType>::Handle Pool<TType>::acquireHandle(TArgs && ... p_args) {
+    Object &obj = acquire(std::forward<TArgs>(p_args)...);
+    return Handle(this, &obj);
+}
+
+// Handle implementation
+template <typename TType>
+Pool<TType>::Handle::Handle() noexcept
+    : pool(nullptr), obj(nullptr) {}
+
+template <typename TType>
+Pool<TType>::Handle::Handle(Pool<TType>* p_pool, Object* p_obj) noexcept
+    : pool(p_pool), obj(p_obj) {}
+
+template <typename TType>
+Pool<TType>::Handle::~Handle() {
+    try {
+        if (pool && obj) {
+            pool->release(*obj);
+        }
+    } catch (...) {
+        // destructor must not throw
+    }
+}
+
+template <typename TType>
+Pool<TType>::Handle::Handle(Handle&& other) noexcept
+    : pool(other.pool), obj(other.obj) {
+    other.pool = nullptr;
+    other.obj = nullptr;
+}
+
+template <typename TType>
+typename Pool<TType>::Handle& Pool<TType>::Handle::operator=(Handle&& other) noexcept {
+    if (this != &other) {
+        // release current
+        if (pool && obj) {
+            try { pool->release(*obj); } catch (...) {}
+        }
+        pool = other.pool;
+        obj = other.obj;
+        other.pool = nullptr;
+        other.obj = nullptr;
+    }
+    return *this;
+}
+
+template <typename TType>
+TType* Pool<TType>::Handle::operator->() {
+    return obj ? obj->object : nullptr;
+}
+
+template <typename TType>
+TType& Pool<TType>::Handle::operator*() {
+    return *(obj->object);
+}
+
+template <typename TType>
+void Pool<TType>::Handle::release() noexcept {
+    if (pool && obj) {
+        try { pool->release(*obj); } catch (...) {}
+        pool = nullptr;
+        obj = nullptr;
+    }
+}
+
+template <typename TType>
+bool Pool<TType>::Handle::valid() const noexcept {
+    return pool != nullptr && obj != nullptr && obj->inUse;
+}
+
+template <typename TType>
 void Pool<TType>::release(typename Pool<TType>::Object & p_object) {
     // Validate that p_object belongs to this pool
     if (p_object.index >= storage.size() || &storage[p_object.index] != &p_object) {
@@ -164,88 +259,4 @@ void Pool<TType>::clear() noexcept {
     }
     storage.clear();
     available.clear();
-}
-
-// --- Handle implementation ---
-template <typename TType>
-Pool<TType>::Handle::Handle() noexcept
-    : pool(nullptr), obj(nullptr) {}
-
-template <typename TType>
-Pool<TType>::Handle::~Handle() {
-    if (pool && obj) {
-        try {
-            pool->release(*obj);
-        } catch (...) {
-            // don't throw from destructor
-        }
-    }
-}
-
-template <typename TType>
-Pool<TType>::Handle::Handle(Pool<TType>* p_pool, Object* p_obj) noexcept
-    : pool(p_pool), obj(p_obj) {}
-
-template <typename TType>
-Pool<TType>::Handle::Handle(Handle&& other) noexcept
-    : pool(other.pool), obj(other.obj) {
-    other.pool = nullptr;
-    other.obj = nullptr;
-}
-
-template <typename TType>
-typename Pool<TType>::Handle& Pool<TType>::Handle::operator=(Handle&& other) noexcept {
-    if (this != &other) {
-        if (pool && obj) {
-            try { pool->release(*obj); } catch (...) {}
-        }
-        pool = other.pool;
-        obj = other.obj;
-        other.pool = nullptr;
-        other.obj = nullptr;
-    }
-    return *this;
-}
-
-template <typename TType>
-TType* Pool<TType>::Handle::operator->() { return obj->object; }
-
-template <typename TType>
-TType& Pool<TType>::Handle::operator*() { return *obj->object; }
-
-template <typename TType>
-void Pool<TType>::Handle::release() noexcept {
-    if (pool && obj) {
-        try { pool->release(*obj); } catch (...) {}
-        pool = nullptr;
-        obj = nullptr;
-    }
-}
-
-template <typename TType>
-bool Pool<TType>::Handle::valid() const noexcept { return obj != nullptr; }
-
-// try_acquire: returns nullptr instead of throwing when pool empty
-template <typename TType>
-template<typename ... TArgs>
-typename Pool<TType>::Object* Pool<TType>::try_acquire(TArgs && ... p_args) noexcept {
-    if (available.empty()) return nullptr;
-    Object* objPtr = available.back();
-    available.pop_back();
-    try {
-        new (objPtr->object) TType(std::forward<TArgs>(p_args)...);
-        objPtr->constructed = true;
-        objPtr->inUse = true;
-    } catch (...) {
-        available.push_back(objPtr);
-        return nullptr;
-    }
-    return objPtr;
-}
-
-template <typename TType>
-template<typename ... TArgs>
-typename Pool<TType>::Handle Pool<TType>::acquireHandle(TArgs && ... p_args) {
-    Object& objRef = acquire(std::forward<TArgs>(p_args)...);
-    return Handle(this, &objRef);
 }

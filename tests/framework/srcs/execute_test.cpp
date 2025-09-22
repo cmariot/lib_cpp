@@ -11,77 +11,25 @@
 /* ************************************************************************** */
 
 #include "libunit.hpp"
+#include <signal.h>
 
-static void	exit_child(t_test **test, int *fd, int *stdout_backup, int status)
+static void	exit_child_and_restore(int fd_out, int fd_err, int stdout_backup, int stderr_backup, int status)
 {
-	clear_test_list(test);
-	close(*fd);
-	dup2(*stdout_backup, 1);
-	close(*stdout_backup);
+	// restore fds and exit
+	if (fd_out >= 0) close(fd_out);
+	if (fd_err >= 0) close(fd_err);
+	dup2(stdout_backup, STDOUT_FILENO);
+	close(stdout_backup);
+	dup2(stderr_backup, STDERR_FILENO);
+	close(stderr_backup);
 	exit(status);
-}
-
-/* Use a function ptr to launch the test function. */
-
-static void	*execute(void *ptr)
-{
-	t_test	*test;
-
-	test = (t_test *)ptr;
-	test->status = (*test).test_add();
-	return (test);
-}
-
-/*
- * Create a thread which call the execute function.
- * The process continue and goes into an infinite loop : 
- *	- If current_time > TIMEOUT_TIME -> break
- *	- Or if the test_status is different than default value -> break
- */
-
-static int	create_threads(t_test **test)
-{
-	pthread_t	thread_id;
-	size_t		init_time;
-
-	init_time = get_time();
-	if (pthread_create(&thread_id, NULL, &execute, *test))
-	{
-		std::cerr << "Error : Thread creation failed." << std::endl;
-		return (42);
-	}
-	while (1)
-	{
-		if (check_timeout(init_time))
-		{
-			pthread_cancel(thread_id);
-			pthread_join(thread_id, NULL);
-			return (TIMEOUT);
-		}
-		else if ((*test)->status != -2)
-			break ;
-		usleep(500);
-	}
-	pthread_join(thread_id, NULL);
-	return ((*test)->status);
 }
 
 /*
  * Create a tmp file and redirect the STDOUT output into this file.
  */
 
-static int	output_redirection(int *fd, int *stdout_backup, t_test *test)
-{
-	*fd = open((char *)std::string(test->filename).c_str(), O_RDWR | O_CREAT | O_TRUNC, 0640);
-	if (*fd == -1)
-	{
-		std::cerr << "Error, file opening failed." << std::endl;
-		return (1);
-	}
-	*stdout_backup = dup(1);
-	dup2(*fd, 1);
-	return (0);
-}
+
 
 /*
  * Fork the process :
@@ -94,10 +42,13 @@ static int	output_redirection(int *fd, int *stdout_backup, t_test *test)
 
 int	execute_test(t_test **test, std::ofstream &log_file)
 {
-	pid_t	pid;
-	int		status;
-	int		fd;
-	int		stdout_backup;
+	(void)log_file;
+	pid_t pid;
+	int status = 0;
+	int fd_out = -1;
+	int fd_err = -1;
+	int stdout_backup = -1;
+	int stderr_backup = -1;
 
 	pid = fork();
 	if (pid == -1)
@@ -107,23 +58,70 @@ int	execute_test(t_test **test, std::ofstream &log_file)
 	}
 	else if (pid == 0)
 	{
-		if (output_redirection(&fd, &stdout_backup, *test))
+		// Child: redirect stdout and stderr to separate files and run test function directly
+		fd_out = open((*test)->filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0640);
+		if (fd_out == -1)
 		{
-			clear_test_list(test);
-			close(fd);
-			return (1);
+			std::cerr << "Error, opening stdout file failed." << std::endl;
+			exit(1);
 		}
-		status = create_threads(test);
-		log_file.close();
-		exit_child(test, &fd, &stdout_backup, status);
+		fd_err = open((*test)->err_filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0640);
+		if (fd_err == -1)
+		{
+			std::cerr << "Error, opening stderr file failed." << std::endl;
+			close(fd_out);
+			exit(1);
+		}
+		stdout_backup = dup(STDOUT_FILENO);
+		stderr_backup = dup(STDERR_FILENO);
+		dup2(fd_out, STDOUT_FILENO);
+		dup2(fd_err, STDERR_FILENO);
+
+		// execute the test function directly
+	int ret = (*test)->test_add();
+		// flush streams
+		fsync(fd_out);
+		fsync(fd_err);
+		exit_child_and_restore(fd_out, fd_err, stdout_backup, stderr_backup, ret);
 	}
 	else
 	{
-		wait(&status);
-		if (WIFEXITED(status))
-			(*test)->status = WEXITSTATUS(status);
-		else if WIFSIGNALED(status)
-			(*test)->status = WTERMSIG(status);
+		// Parent: waitpid with timeout
+		size_t init = get_time();
+		while (1)
+		{
+			pid_t w = waitpid(pid, &status, WNOHANG);
+			if (w == -1)
+			{
+				// error
+				(*test)->status = 1;
+				break;
+			}
+			else if (w == 0)
+			{
+				// child still running
+				if (check_timeout(init))
+				{
+					// kill child
+					kill(pid, SIGKILL);
+					waitpid(pid, &status, 0);
+					(*test)->status = TIMEOUT;
+					break;
+				}
+				usleep(500);
+				continue;
+			}
+			else
+			{
+				// child exited
+				if (WIFEXITED(status))
+					(*test)->status = WEXITSTATUS(status);
+				else if (WIFSIGNALED(status))
+					(*test)->status = WTERMSIG(status);
+				break;
+			}
+		}
 	}
+	// parent doesn't unlink files here; print_test_output will consume and unlink
 	return (0);
 }
