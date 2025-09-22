@@ -42,6 +42,8 @@ typedef struct s_test {
 	std::string		err_filename;			// Separate stderr file for this test
 	bool            display_stdout;         // Display stdout or not
     std::string		expected_output;		// If expected != output -> Error
+	size_t			start_time;			    // start time in ms since epoch for the test run
+	size_t			duration_ms;			// duration of the test in milliseconds
 	struct s_test	*next;					// Pointer on the next test
 }	t_test;
 
@@ -57,8 +59,11 @@ int				check_timeout(size_t init_time);
 void			clear_test_list(t_test **test);
 void			print_test_output(t_test *test, int test_nb, std::ostream &fd, bool to_console);
 int				results(int succeeded, int total, std::ostream &fd, bool recursive);
-extern int g_test_left_width;
+
+// Global width of the left column for printing test results aligned
+extern int      g_test_left_width;
+
 // When true, temporary per-test files are kept (not unlinked) for debugging.
-extern bool g_keep_test_tmp;
+extern bool     g_keep_test_tmp;
 
 #endif

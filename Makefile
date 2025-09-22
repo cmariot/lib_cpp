@@ -172,6 +172,11 @@ help:
 	@echo "  tests-clean - Supprime les binaires/objets des tests"
 	@echo "  help     - Affiche ce message d'aide"
 
+
+tests-debug:
+	@echo "Running tests in debug mode (KEEP_TEST_TMP=1)..."
+	@KEEP_TEST_TMP=1 $(MAKE) tests
+
 docs:
 	@echo "Generating documentation..."
 	@if command -v doxygen >/dev/null 2>&1; then \

@@ -50,6 +50,8 @@ int	execute_test(t_test **test, std::ofstream &log_file)
 	int stdout_backup = -1;
 	int stderr_backup = -1;
 
+	// record start time
+	(*test)->start_time = get_time();
 	pid = fork();
 	if (pid == -1)
 	{
@@ -118,6 +120,8 @@ int	execute_test(t_test **test, std::ofstream &log_file)
 					(*test)->status = WEXITSTATUS(status);
 				else if (WIFSIGNALED(status))
 					(*test)->status = WTERMSIG(status);
+				// compute duration
+				(*test)->duration_ms = get_time() - (*test)->start_time;
 				break;
 			}
 		}

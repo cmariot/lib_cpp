@@ -162,6 +162,10 @@ void	print_test_output(t_test *test, int test_number, std::ostream &fd, bool to_
 
 	// For console output we want colors; for file output we don't.
 	write_status(fd, to_console);
+	// Write duration (if known) after status
+	if (test->duration_ms > 0)
+		fd << " (" << test->duration_ms << " ms)";
+
 	// Add per-test separator with timestamp when writing to log (no color)
 	if (!to_console)
 	{

@@ -24,9 +24,11 @@ std::ofstream	create_log_file(t_test *test)
 {
 	(void)test; // parameter intentionally unused: header/title is global 'libftpp'
 	const std::string logs_dir = "tests/logs";
+	const std::string tmp_dir = logs_dir + "/tmp";
 	// Ensure logs directory exists using std::filesystem
 	try {
 		std::filesystem::create_directories(logs_dir);
+		std::filesystem::create_directories(tmp_dir);
 	} catch (const std::exception &e) {
 		std::cerr << "Warning: could not create logs directory '" << logs_dir << "': " << e.what() << std::endl;
 	}
