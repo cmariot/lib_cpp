@@ -12,5 +12,6 @@
     # include "data_structures/data_structure.hpp"
     # include "iostream/thread_safe_iostream.hpp"
     # include "design_patterns/design_patterns.hpp"
+    # include "networking/network.hpp"
 
 #endif

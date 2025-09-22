@@ -45,7 +45,9 @@ SRC_ROOTDIR		= sources/
 
 SRC_FILES = \
 data_structures/data_buffer.cpp \
-iostream/thread_safe_iostream.cpp
+iostream/thread_safe_iostream.cpp \
+	networking/client.cpp \
+	networking/server.cpp
 
 
 SRCS			= $(addprefix $(SRC_ROOTDIR), $(SRC_FILES))
@@ -84,7 +86,11 @@ tests/data_structures/pool/handle_test.cpp \
 tests/design_patterns/memento.cpp \
 tests/design_patterns/observer_test.cpp \
 tests/design_patterns/singleton_test.cpp \
-tests/design_patterns/state_machine_test.cpp
+tests/design_patterns/state_machine_test.cpp \
+tests/networking/loopback_test.cpp \
+tests/networking/message_test.cpp \
+tests/networking/message_helpers_test.cpp \
+tests/networking/broadcast_test.cpp
 
 # All test cpp files under tests/ (used to trigger regeneration of the launcher)
 # Exclude the generated launcher itself to avoid a circular dependency
@@ -179,20 +185,10 @@ tests-debug:
 
 docs:
 	@echo "Generating documentation..."
-	@if command -v doxygen >/dev/null 2>&1; then \
-		if doxygen Doxyfile >/dev/null 2>&1; then \
-			echo "Documentation generated in documentation/html"; \
-			if [ -f documentation/html/index.html ]; then open documentation/html/index.html; else echo "Warning: documentation/html/index.html not found"; fi; \
-		else \
-			echo "Doxygen failed to generate documentation"; exit 1; \
-		fi; \
-	else \
-		if [ -f documentation/html/index.html ]; then \
-			echo "Doxygen not found — opening existing documentation/html/index.html"; open documentation/html/index.html; \
-		else \
-			echo "Doxygen not found. Install it to generate docs (brew install doxygen)"; exit 1; \
-		fi; \
-	fi
+	@# Try repo script first
+	@if [ -x scripts/generate_docs.sh ]; then ./scripts/generate_docs.sh || { echo "Documentation generation failed"; exit 1; }; fi
+	@# If the script produced output, open it; otherwise fallback to system doxygen
+	@if [ -f docs/doxygen/html/index.html ]; then open docs/doxygen/html/index.html; elif command -v doxygen >/dev/null 2>&1; then doxygen Doxyfile || { echo "Doxygen failed to generate documentation"; exit 1; }; if [ -f documentation/html/index.html ]; then open documentation/html/index.html; else echo "Documentation generated but documentation/html/index.html not found"; fi; else echo "Doxygen not found. Install it (brew install doxygen) or add scripts/generate_docs.sh"; exit 1; fi
 
 
 tests: $(TEST_BIN_DIR) tests/tests_launcher.cpp $(TEST_OBJS) tests/framework/libunit.a $(NAME)
